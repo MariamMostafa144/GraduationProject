@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Spoken Gloves App</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="addItem">Hand Movements</string>
+
+    <string name="dialog_message2">Are you sure to delete this sign?</string>
+    <string name="EnterName">Enter Name</string>
+    <string name="addSign">add</string>
+    <string name="Cancel">Cancel</string>
+
+    <string name="record">record</string>
+    <string name="dialog_message">This app want to turn on Bluetooth</string>
+    <string name="dialog_title">Bluetooth Permission</string>
+    <string name="SelectDevice">Select Device</string>
+    <string name="Description">Description</string>
+
+    dialog_message
+</resources>
