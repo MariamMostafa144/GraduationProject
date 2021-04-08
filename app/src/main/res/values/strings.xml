@@ -14,6 +14,8 @@
     <string name="dialog_title">Bluetooth Permission</string>
     <string name="SelectDevice">Select Device</string>
     <string name="Description">Description</string>
+    <string name="typeMessage">Type a message</string>
+    <string name="SpokenGloves">Spoken Gloves</string>
 
     dialog_message
 </resources>

@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "155422145678",
+    "project_id": "garduate"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155422145678:android:84f42fd2bb733860fadddf",
+        "android_client_info": {
+          "package_name": "com.example.spokenglovesapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "155422145678-e65df1pjq682cmm3b6pm7u49obbu7ig5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.spokenglovesapp",
+            "certificate_hash": "2d8069bd7f0628e8dee7998a81a635a6a9c227ca"
+          }
+        },
+        {
+          "client_id": "155422145678-9p0v0o7cunh1i3b56s9gq0gp8o9omqso.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJ43oUcbCDdzRv0ZDAdpqGQHyaWRMIXos"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "155422145678-9p0v0o7cunh1i3b56s9gq0gp8o9omqso.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

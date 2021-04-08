@@ -1,22 +1,13 @@
 package com.example.spokenglovesapp;
 
+import android.graphics.PorterDuff;
+import android.os.Bundle;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.loader.app.LoaderManager;
-import androidx.viewpager.widget.ViewPager;
-import androidx.viewpager2.widget.ViewPager2;
-
-import android.app.Activity;
-import android.graphics.PorterDuff;
-import android.os.Bundle;
-import android.view.MotionEvent;
-import android.view.View;
-import android.widget.TableLayout;
 
 import com.example.spokenglovesapp.databinding.ActivityMainBinding;
-import com.google.android.material.tabs.TabItem;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
@@ -33,7 +24,6 @@ public class MainActivity extends AppCompatActivity {
         binding=ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         tabLayout=findViewById(R.id.main_tabLayout);
-
      Thread thread=new Thread(){
          @Override
          public void run() {
@@ -79,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
                  }
 
+
                  @Override
                  public void onTabReselected(TabLayout.Tab tab) {
                      int position = tab.getPosition();
@@ -96,5 +87,10 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         binding=null;
     }
+    /*
+    public void home(){
+        Intent serintent=new Intent(MainActivity.this,connection_bckground.class);
+        startService(serintent);
 
+    }*/
 }
