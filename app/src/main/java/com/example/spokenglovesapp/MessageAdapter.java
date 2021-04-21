@@ -35,6 +35,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
         databaseReference= FirebaseDatabase.getInstance().getReference();
 
+
        // String currentChatId=databaseReference.child("UserInfo").push().getKey();
         Message message=userMessageList.get(i);
 
@@ -45,16 +46,15 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
 
         messageViewHolder.tvGloves.setVisibility(View.INVISIBLE);
         messageViewHolder.tvOther.setVisibility(View.INVISIBLE);
-        if(senderId==chatId){
-            messageViewHolder.tvOther.setVisibility(View.VISIBLE);
-            messageViewHolder.tvOther.setBackgroundResource(R.drawable.other_message);
-            messageViewHolder.tvOther.setText(myMessage);
-        }
-        else {
-
+        if(senderId==GlovesId){
             messageViewHolder.tvGloves.setVisibility(View.VISIBLE);
             messageViewHolder.tvGloves.setBackgroundResource(R.drawable.gloves_message);
             messageViewHolder.tvGloves.setText(myMessage);
+        }
+        else {
+            messageViewHolder.tvOther.setVisibility(View.VISIBLE);
+            messageViewHolder.tvOther.setBackgroundResource(R.drawable.other_message);
+            messageViewHolder.tvOther.setText(myMessage);
 
         }
     }

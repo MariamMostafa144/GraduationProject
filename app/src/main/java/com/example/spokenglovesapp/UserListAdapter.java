@@ -12,8 +12,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
@@ -23,7 +27,6 @@ import java.util.List;
 public class UserListAdapter extends BaseAdapter {
     List<UploadUserInfo> data;
     Context context;
-    Integer index;
     AlertDialog.Builder builder;
     StorageReference storageReference ;
     FirebaseDatabase firebaseDatabase ;
@@ -51,7 +54,7 @@ public class UserListAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         LayoutInflater inflater=(LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         @SuppressLint("ViewHolder") final View row=inflater.inflate(R.layout.user_list_item,parent,false);
         storageReference = FirebaseStorage.getInstance("gs://garduate.appspot.com").getReference().child("UserInfo/");
@@ -65,13 +68,38 @@ public class UserListAdapter extends BaseAdapter {
         btnDeleteUser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                index = (Integer) v.getTag();
                 builder = new AlertDialog.Builder(context);
                 builder.setMessage("Are you sure to delete this chat ?")
                         .setCancelable(false)
                         .setPositiveButton("yes", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                data.remove(index.intValue());
+                                String chat_id=data.get(position).getChat_id();
+                                Query deleteQuery = databaseReference.orderByChild("chat_id").equalTo(chat_id);
+                                deleteQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
+                                            snapshot.getRef().removeValue();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                    }
+                                });
+                                Query messages =firebaseDatabase.getReference().child("MessagesDetails").orderByChild("chatId").equalTo(chat_id);
+                                messages.addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+                                        for (DataSnapshot snapshot: dataSnapshot.getChildren()) {
+                                            snapshot.getRef().removeValue();
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+                                    }
+                                });
                                 notifyDataSetChanged();
                             }
                         })
@@ -90,6 +118,8 @@ public class UserListAdapter extends BaseAdapter {
         final UploadUserInfo content=data.get(position);
         tvUserName.setText(content.getUserName());
         Picasso.get().load(content.getImageURL()).fit().centerCrop().into(userImg);
+
         return row;
     }
+
 }

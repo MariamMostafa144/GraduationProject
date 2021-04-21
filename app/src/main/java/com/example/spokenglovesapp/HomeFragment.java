@@ -1,49 +1,52 @@
  package com.example.spokenglovesapp;
 
  import android.Manifest;
-import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.ProgressDialog;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.ListView;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
+ import android.app.Activity;
+ import android.app.AlertDialog;
+ import android.app.Dialog;
+ import android.app.ProgressDialog;
+ import android.bluetooth.BluetoothAdapter;
+ import android.bluetooth.BluetoothDevice;
+ import android.bluetooth.BluetoothSocket;
+ import android.content.BroadcastReceiver;
+ import android.content.Context;
+ import android.content.DialogInterface;
+ import android.content.Intent;
+ import android.content.IntentFilter;
+ import android.net.wifi.WifiInfo;
+ import android.net.wifi.WifiManager;
+ import android.os.AsyncTask;
+ import android.os.Build;
+ import android.os.Bundle;
+ import android.util.Log;
+ import android.view.LayoutInflater;
+ import android.view.View;
+ import android.view.ViewGroup;
+ import android.widget.AdapterView;
+ import android.widget.Button;
+ import android.widget.ListView;
+ import android.widget.Switch;
+ import android.widget.TextView;
+ import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
+ import androidx.annotation.NonNull;
+ import androidx.annotation.RequiresApi;
+ import androidx.fragment.app.Fragment;
+ import androidx.fragment.app.FragmentManager;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+ import com.google.firebase.database.DataSnapshot;
+ import com.google.firebase.database.DatabaseError;
+ import com.google.firebase.database.DatabaseReference;
+ import com.google.firebase.database.FirebaseDatabase;
+ import com.google.firebase.database.Query;
+ import com.google.firebase.database.ValueEventListener;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+ import java.io.IOException;
+ import java.util.ArrayList;
+ import java.util.List;
+ import java.util.UUID;
 
-import static android.widget.Toast.LENGTH_SHORT;
+ import static android.widget.Toast.LENGTH_SHORT;
 
 public class HomeFragment extends Fragment {
 
@@ -63,9 +66,12 @@ public class HomeFragment extends Fragment {
 
     List<UploadUserInfo> listOfUsers;
     DatabaseReference databaseReference;
+    Query userInfoQuery;
+    WifiManager wifiManager;
+    WifiInfo wInfo;
+    String macAddress;
 
-
-  //  WifiLevelReceiver receiver;
+    //  WifiLevelReceiver receiver;
     private BroadcastReceiver mBroadcastReceiver3 = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -90,6 +96,10 @@ public class HomeFragment extends Fragment {
     databaseReference= FirebaseDatabase.getInstance().getReference("UserInfo");
     listOfUsers=new ArrayList<>();
 
+    wifiManager = (WifiManager) getContext().getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+     wInfo = wifiManager.getConnectionInfo();
+     macAddress = wInfo.getMacAddress();
+
     switchConnection=view.findViewById(R.id.switchConnection);
     btnNewChat=view.findViewById(R.id.btnNewChat);
     userList=view.findViewById(R.id.userList);
@@ -98,8 +108,11 @@ public class HomeFragment extends Fragment {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Intent intent=new Intent(getActivity(),Chat.class);
-            String currentChat=databaseReference.child("UserInfo").push().getKey();
-            intent.putExtra("id",currentChat);
+            Bundle bundle=new Bundle();
+            bundle.putString("id",listOfUsers.get(position).getChat_id());
+            bundle.putString("name",listOfUsers.get(position).getUserName());
+            bundle.putString("url",listOfUsers.get(position).getImageURL());
+            intent.putExtras(bundle);
             startActivity(intent);
         }
     });
@@ -160,18 +173,21 @@ public class HomeFragment extends Fragment {
         }
     });
 
-        databaseReference.addValueEventListener(new ValueEventListener() {
+        userInfoQuery=databaseReference.orderByChild("macAddress").equalTo(macAddress);
+        userInfoQuery.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 listOfUsers.clear();
-                for (DataSnapshot userDataSnapshot : snapshot.getChildren()){
-                    UploadUserInfo uploadUserInfo=userDataSnapshot.getValue(UploadUserInfo.class);
-                    listOfUsers.add(uploadUserInfo);
-                }
-                UserListAdapter userListAdapter=new UserListAdapter(listOfUsers,getContext());
-                userList.setAdapter(userListAdapter);
-            }
+                if (snapshot.exists()) {
+                    for (DataSnapshot userDataSnapshot : snapshot.getChildren()) {
+                        UploadUserInfo uploadUserInfo = userDataSnapshot.getValue(UploadUserInfo.class);
+                        listOfUsers.add(uploadUserInfo);
 
+                    }
+                    UserListAdapter userListAdapter = new UserListAdapter(listOfUsers, getContext());
+                    userList.setAdapter(userListAdapter);
+                }
+            }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
 

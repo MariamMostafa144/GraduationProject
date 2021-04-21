@@ -1,6 +1,9 @@
 package com.example.spokenglovesapp;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.text.Editable;
@@ -9,10 +12,10 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,11 +23,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -33,9 +37,10 @@ public class Chat extends AppCompatActivity {
 
     EditText etMessage;
     FloatingActionButton fab;
+    TextView nameOfUser;
     public static String message;
     private static final int REQIEST_CODE_SPEACH_INPUT = 1000;
-    ImageView imgBack;
+    ImageView imgBack,userImg;
 
     private  ArrayList<Message>messagesList=new ArrayList<>();
     private LinearLayoutManager linearLayoutManager;
@@ -44,6 +49,12 @@ public class Chat extends AppCompatActivity {
     private DatabaseReference databaseReference;
     String currentChatId;
 
+    WifiManager wifiManager;
+    WifiInfo wInfo;
+    String mac_address,currentUserName,currentUserUrl;
+    Query userInfoQuery;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,16 +62,24 @@ public class Chat extends AppCompatActivity {
         fab = findViewById(R.id.fab);
         etMessage = findViewById(R.id.etMessage);
         imgBack=findViewById(R.id.imgBack);
+        nameOfUser=findViewById(R.id.nameOfUser);
+        userImg=findViewById(R.id.userImg);
 
-        messageAdapter=new MessageAdapter(messagesList);
         userMessagesList=findViewById(R.id.messageRecycle);
         linearLayoutManager=new LinearLayoutManager(this);
-        messagesList=new ArrayList<>();
         userMessagesList.setLayoutManager(linearLayoutManager);
-        userMessagesList.setAdapter(messageAdapter);
+        messagesList=new ArrayList<>();
 
-        currentChatId=getIntent().getExtras().get("id").toString();
-        databaseReference= FirebaseDatabase.getInstance().getReference();
+
+        Bundle bundle=getIntent().getExtras();
+        currentChatId=bundle.getString("id");
+        currentUserName=bundle.getString("name");
+        currentUserUrl=bundle.getString("url");
+        nameOfUser.setText(currentUserName);
+        databaseReference= FirebaseDatabase.getInstance().getReference("MessagesDetails");
+        userInfoQuery=databaseReference.orderByChild("chatId").equalTo(currentChatId);
+        //Picasso.get().load(currentUserUrl).fit().centerCrop().into(userImg);
+
 
         imgBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -133,7 +152,7 @@ public class Chat extends AppCompatActivity {
             case REQIEST_CODE_SPEACH_INPUT:
                 if (resultCode == RESULT_OK && data != null) {
                     ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-                    //tvTest.setText(result.get(0));
+                    etMessage.setText(result.get(0));
                 }
                 break;
         }
@@ -142,45 +161,21 @@ public class Chat extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        databaseReference.child("Messages").child("senderGlovesId").child("fromUserId").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-                Message message=snapshot.getValue(Message.class);
-                messagesList.add(message);
-                messageAdapter.notifyDataSetChanged();
-
-            }
-
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-            }
-
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
-
-            }
-
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
+        retrieveMessages();
     }
     private void sendMessage(){
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wInfo = wifiManager.getConnectionInfo();
+        mac_address = wInfo.getMacAddress();
         Message message=new Message();
         String messageText= etMessage.getText().toString();
         message.setMessage(messageText);
-        message.setSenderId(currentChatId);
-        databaseReference.child("MessagesDetails").push().setValue(message).addOnSuccessListener(new OnSuccessListener<Void>() {
+        message.setSenderId(mac_address);
+        message.setChatId(currentChatId);
+        databaseReference.push().setValue(message).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                    Toast.makeText(Chat.this,"Message sent sucessfully",Toast.LENGTH_LONG).show();
+                retrieveMessages();
                 }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -188,5 +183,26 @@ public class Chat extends AppCompatActivity {
                 Toast.makeText(Chat.this,"Error..!",Toast.LENGTH_LONG).show();
             }
         });
+    }
+    public void retrieveMessages(){
+        userInfoQuery.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()){
+                    messagesList.clear();
+                    for (DataSnapshot npsnapshot : snapshot.getChildren()){
+                        Message l=npsnapshot.getValue(Message.class);
+                        messagesList.add(l);
+                    }
+                    messageAdapter=new MessageAdapter(messagesList);
+                    userMessagesList.setAdapter(messageAdapter);
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+
+            }
+        });
+
     }
 }
